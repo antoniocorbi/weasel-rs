@@ -42,3 +42,19 @@ impl fmt::Display for Gene {
         write!(f, "Gene: {} ", self.data)
     }
 }
+
+trait MutableGene {
+    fn mutate_data(&mut self, mr: f64);
+}
+
+impl MutableGene for Gene {
+    fn mutate_data(&mut self, mr: f64) {
+        use rand::Rng;
+        let mut rng = rand::rng();
+        let p = rng.random_range(0.0..=1.0);
+
+        if p < mr {
+            self.set_random_data();
+        }
+    }
+}
