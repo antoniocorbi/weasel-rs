@@ -16,8 +16,10 @@
 use weasel_rs::libweasel::{charset, gene::Gene};
 
 fn main() {
-    let g = Gene::new('a');
-    println!("Hello weasel with gene: {}", g.get());
+    let mut g = Gene::new('a');
+    println!("Hello weasel with gene('a'): {}", g.get());
+    g.set_random_data();
+    println!("Hello weasel with gene(_random_): {}", g.get());
 
     for _ in 1..=32 {
         println!("rand. char: {}", charset::rand_char());

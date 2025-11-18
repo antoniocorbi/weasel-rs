@@ -13,6 +13,7 @@
 // You should have received a copy of the GNU General Public License
 // along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
+use crate::libweasel::charset;
 use std::fmt;
 
 pub struct Gene {
@@ -29,6 +30,9 @@ impl Gene {
     }
     pub fn set(&mut self, c: char) {
         self.data = c;
+    }
+    pub fn set_random_data(&mut self) {
+        self.data = charset::rand_char();
     }
 }
 

@@ -18,7 +18,7 @@ use std::string::String;
 // import commonly used items from the prelude:
 use rand::prelude::*;
 
-pub static CHARSET: Lazy<String> = Lazy::new(|| {
+static CHARSET: Lazy<String> = Lazy::new(|| {
     let s = " ,.;:_-abcdefghijklmnñopqrstuvwxyzABCDEFGHIJKLMNÑOPQRSTUVWXYZ0123456789";
 
     format!("{}", s)
