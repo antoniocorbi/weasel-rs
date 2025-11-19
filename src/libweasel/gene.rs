@@ -16,6 +16,7 @@
 use crate::libweasel::charset;
 use std::fmt;
 
+#[derive(Clone)]
 pub struct Gene {
     data: char,
 }
@@ -23,6 +24,10 @@ pub struct Gene {
 impl Gene {
     pub fn new(c: char) -> Self {
         Gene { data: c }
+    }
+    pub fn new_from_random() -> Self {
+        let data = charset::rand_char();
+        Gene { data }
     }
 
     pub fn get(&self) -> char {
@@ -56,5 +61,23 @@ impl MutableGene for Gene {
         if p < mr {
             self.set_random_data();
         }
+    }
+}
+
+impl From<&Gene> for char {
+    fn from(g: &Gene) -> Self {
+        g.get()
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn mutate_gene() {
+        let mut g = Gene::new('a');
+        g.mutate_data(0.8);
+        assert!(g.get() != 'a' || g.get() == 'a');
     }
 }

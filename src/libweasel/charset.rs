@@ -16,7 +16,7 @@
 use once_cell::sync::Lazy;
 use std::string::String;
 // import commonly used items from the prelude:
-use rand::prelude::*;
+//use rand::prelude::*;
 
 static CHARSET: Lazy<String> = Lazy::new(|| {
     let s = " ,.;:_-abcdefghijklmnñopqrstuvwxyzABCDEFGHIJKLMNÑOPQRSTUVWXYZ0123456789";
@@ -33,4 +33,25 @@ pub fn rand_char() -> char {
     let c = CHARSET.chars().nth(i);
 
     c.unwrap()
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn not_in_charset() {
+        assert!(!in_char_set('='));
+        assert!(!in_char_set('@'));
+        assert!(!in_char_set('·'));
+    }
+
+    #[test]
+    fn in_charset() {
+        assert!(in_char_set(' '));
+        assert!(in_char_set('a'));
+        assert!(in_char_set('A'));
+        assert!(in_char_set('1'));
+        assert!(in_char_set('_'));
+    }
 }
