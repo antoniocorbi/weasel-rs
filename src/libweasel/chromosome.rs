@@ -20,7 +20,7 @@ use std::ops::Index;
 type GeneList = Vec<Box<Gene>>;
 
 #[derive(Clone)]
-struct Chromosome {
+struct ChromosomeData {
     // -- Data members: -------------------------------------------------------
     /// The signal to emit
     pub on_evolve_iteration: Option<Signal<(u32, u32, Box<Chromosome>)>>,
@@ -32,19 +32,25 @@ struct Chromosome {
     gene_list: GeneList,
 }
 
+#[derive(Clone)]
+struct Chromosome {
+    // -- Data members: -------------------------------------------------------
+    cd: ChromosomeData,
+}
+
 // -- Methods: ------------------------------------------------------------
-impl Chromosome {
+impl ChromosomeData {
     // -- Methods: ------------------------------------------------------------
     pub fn new(tstr: String, ncopies: u32) -> Self {
-        let mut c = Chromosome {
+        let mut cd = ChromosomeData {
             on_evolve_iteration: None,
             target_string: tstr,
             ncopies,
             gene_list: vec![],
         };
-        c.create_random_genes();
+        cd.create_random_genes();
 
-        c
+        cd
     }
 
     pub fn ncopies(self) -> u32 {
@@ -92,7 +98,7 @@ impl Chromosome {
     }
 }
 
-impl Index<usize> for Chromosome {
+impl Index<usize> for ChromosomeData {
     type Output = Box<Gene>;
 
     fn index(&self, idx: usize) -> &Self::Output {
@@ -100,9 +106,69 @@ impl Index<usize> for Chromosome {
     }
 }
 
-impl Drop for Chromosome {
+impl Drop for ChromosomeData {
     fn drop(&mut self) {
         self.free_gene_list();
+    }
+}
+
+impl Index<usize> for Chromosome {
+    type Output = Box<Gene>;
+
+    fn index(&self, idx: usize) -> &Self::Output {
+        &self.cd[idx]
+    }
+}
+
+impl Chromosome {
+    // -- Methods: ------------------------------------------------------------
+    pub fn new(tstr: String, ncopies: u32) -> Self {
+        let cd = ChromosomeData::new(tstr, ncopies);
+        Chromosome { cd }
+    }
+
+    pub fn ncopies(self) -> u32 {
+        self.cd.ncopies()
+    }
+
+    pub fn target(&self) -> String {
+        self.cd.target()
+    }
+
+    fn create_genes_from_target(&mut self) {
+        self.cd.free_gene_list();
+        for c in self.cd.target_string.chars() {
+            self.cd.gene_list.push(Box::new(Gene::new(c)));
+        }
+    }
+
+    fn create_random_genes(&mut self) {
+        self.cd.free_gene_list();
+        for _ in 0..self.cd.target_string.len() {
+            self.cd.gene_list.push(Box::new(Gene::new_from_random()));
+        }
+    }
+
+    fn free_gene_list(&mut self) {
+        self.cd.gene_list.clear();
+    }
+
+    pub fn size(&self) -> usize {
+        self.cd.gene_list.len()
+    }
+
+    pub fn fitness(&self, v: &GeneList) -> u32 {
+        let mut d: u32 = 0;
+        let mut i = 0;
+
+        for c in self.cd.target_string.chars() {
+            if c != (&*v[i]).into() {
+                d += 1;
+            }
+            i += 1;
+        }
+
+        d
     }
 }
 
