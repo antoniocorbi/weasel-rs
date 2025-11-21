@@ -16,6 +16,8 @@
 use crate::libweasel::charset;
 use std::fmt;
 
+pub type GeneList = Vec<Box<Gene>>;
+
 #[derive(Clone)]
 pub struct Gene {
     data: char,

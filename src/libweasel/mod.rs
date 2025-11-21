@@ -15,4 +15,5 @@
 
 pub mod charset;
 pub mod chromosome;
+pub mod evolvingchromosome;
 pub mod gene;

@@ -28,6 +28,7 @@ fn main() {
     println!("ç is allowed char? {}", charset::in_char_set('ç'));
     println!("! is allowed char? {}", charset::in_char_set('!'));
     println!("@ is allowed char? {}", charset::in_char_set('@'));
+
     println!("_ is allowed char? {}", charset::in_char_set('_'));
     println!("9 is allowed char? {}", charset::in_char_set('9'));
 }

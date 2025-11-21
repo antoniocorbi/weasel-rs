@@ -13,11 +13,12 @@
 // You should have received a copy of the GNU General Public License
 // along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
-use crate::libweasel::gene::Gene;
+use crate::libweasel::gene::{Gene, GeneList};
+use delegate::delegate;
 use signals2::*;
 use std::ops::Index;
 
-type GeneList = Vec<Box<Gene>>;
+// pub type GeneList = Vec<Box<Gene>>;
 
 #[derive(Clone)]
 struct ChromosomeData {
@@ -33,7 +34,7 @@ struct ChromosomeData {
 }
 
 #[derive(Clone)]
-struct Chromosome {
+pub struct Chromosome {
     // -- Data members: -------------------------------------------------------
     cd: ChromosomeData,
 }
@@ -53,7 +54,7 @@ impl ChromosomeData {
         cd
     }
 
-    pub fn ncopies(self) -> u32 {
+    pub fn ncopies(&self) -> u32 {
         self.ncopies
     }
 
@@ -120,6 +121,22 @@ impl Index<usize> for Chromosome {
     }
 }
 
+// use std::ops::{Deref, DerefMut};
+//
+// impl Deref for Chromosome {
+//     type Target = ChromosomeData; // El tipo interno al que se delega
+//
+//     fn deref(&self) -> &Self::Target {
+//         &self.cd // Devuelve una referencia inmutable al campo interno
+//     }
+// }
+//
+// impl DerefMut for Chromosome {
+//     fn deref_mut(&mut self) -> &mut Self::Target {
+//         &mut self.cd // Devuelve una referencia mutable al campo interno
+//     }
+// }
+
 impl Chromosome {
     // -- Methods: ------------------------------------------------------------
     pub fn new(tstr: String, ncopies: u32) -> Self {
@@ -127,48 +144,20 @@ impl Chromosome {
         Chromosome { cd }
     }
 
-    pub fn ncopies(self) -> u32 {
-        self.cd.ncopies()
-    }
+    // Usamos el atributo 'delegate' para indicar que los siguientes
+    // métodos deben delegar en el campo 'cd'.
 
-    pub fn target(&self) -> String {
-        self.cd.target()
-    }
-
-    fn create_genes_from_target(&mut self) {
-        self.cd.free_gene_list();
-        for c in self.cd.target_string.chars() {
-            self.cd.gene_list.push(Box::new(Gene::new(c)));
+    delegate! {
+        to self.cd {
+          // Se delegan estos métodos específicos
+          pub fn ncopies(&self) -> u32;
+          pub fn target(&self) -> String;
+          // Se delega este método mutable
+          fn create_genes_from_target(&mut self);
+          fn create_random_genes(&mut self);
+          pub fn size(&self) -> usize;
+          pub fn fitness(&self, v: &GeneList) -> u32;
         }
-    }
-
-    fn create_random_genes(&mut self) {
-        self.cd.free_gene_list();
-        for _ in 0..self.cd.target_string.len() {
-            self.cd.gene_list.push(Box::new(Gene::new_from_random()));
-        }
-    }
-
-    fn free_gene_list(&mut self) {
-        self.cd.gene_list.clear();
-    }
-
-    pub fn size(&self) -> usize {
-        self.cd.gene_list.len()
-    }
-
-    pub fn fitness(&self, v: &GeneList) -> u32 {
-        let mut d: u32 = 0;
-        let mut i = 0;
-
-        for c in self.cd.target_string.chars() {
-            if c != (&*v[i]).into() {
-                d += 1;
-            }
-            i += 1;
-        }
-
-        d
     }
 }
 
