@@ -13,20 +13,31 @@
 // You should have received a copy of the GNU General Public License
 // along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
+use delegate::delegate;
+
 use crate::libweasel::charset;
 use std::fmt;
 
 pub type GeneList<T> = Vec<Box<T>>;
 
+// -- Classes: ------------------------------------------------------------
 #[derive(Clone)]
 pub struct Gene {
     data: char,
 }
 
+#[derive(Clone)]
+pub struct MutableGene(Gene);
+
+// -- Traits: -------------------------------------------------------------
 pub trait GeneExt {
     fn get(&self) -> char;
     fn set(&mut self, c: char);
     fn set_random_data(&mut self);
+}
+
+pub trait MutableGeneExt {
+    fn mutate_data(&mut self, mr: f64);
 }
 
 pub trait GeneCreationExt {
@@ -34,6 +45,7 @@ pub trait GeneCreationExt {
     fn new_from_random() -> Self;
 }
 
+// -- Impl. blocks: -------------------------------------------------------
 impl GeneCreationExt for Gene {
     fn new(c: char) -> Self {
         Gene { data: c }
@@ -57,6 +69,27 @@ impl GeneExt for Gene {
     }
 }
 
+impl GeneExt for MutableGene {
+    delegate! {
+        to self.0 {
+          fn get(&self) -> char;
+          fn set(&mut self, c: char);
+          fn set_random_data(&mut self);
+        }
+    }
+}
+
+impl GeneCreationExt for MutableGene {
+    fn new(c: char) -> Self {
+        MutableGene(Gene { data: c })
+    }
+
+    fn new_from_random() -> Self {
+        let data = charset::rand_char();
+        MutableGene(Gene { data })
+    }
+}
+
 impl fmt::Display for Gene {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
         // Escribimos en el formateador 'f' la representación que queremos
@@ -64,11 +97,14 @@ impl fmt::Display for Gene {
     }
 }
 
-pub trait MutableGeneExt {
-    fn mutate_data(&mut self, mr: f64);
+impl fmt::Display for MutableGene {
+    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
+        // Escribimos en el formateador 'f' la representación que queremos
+        write!(f, "MutableGene: {} ", self.get())
+    }
 }
 
-impl MutableGeneExt for Gene {
+impl MutableGeneExt for MutableGene {
     fn mutate_data(&mut self, mr: f64) {
         use rand::Rng;
         let mut rng = rand::rng();
@@ -80,20 +116,28 @@ impl MutableGeneExt for Gene {
     }
 }
 
-// impl From<&dyn GeneTrait> for char {
-//     fn from(g: &T) -> Self {
-//         g.get()
-//     }
-// }
+impl From<&Gene> for char {
+    fn from(g: &Gene) -> Self {
+        g.get()
+    }
+}
 
+impl From<&MutableGene> for char {
+    fn from(g: &MutableGene) -> Self {
+        g.get()
+    }
+}
+
+// -- Tests: --------------------------------------------------------------
 #[cfg(test)]
 mod tests {
     use super::*;
 
     #[test]
     fn mutate_gene() {
-        let mut g = Gene::new('a');
+        let mut g = MutableGene::new('a');
         g.mutate_data(0.8);
-        assert!(g.get() != 'a' || g.get() == 'a');
+        let c: char = (&g).into();
+        assert!(c != 'a' || g.get() == 'a');
     }
 }

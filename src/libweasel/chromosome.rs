@@ -13,13 +13,15 @@
 // You should have received a copy of the GNU General Public License
 // along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
-use crate::libweasel::gene::{Gene, GeneCreationExt, GeneExt, GeneList};
+use crate::libweasel::gene::{Gene, GeneCreationExt, GeneExt, GeneList, MutableGene};
 use delegate::delegate;
 use signals2::*;
 use std::ops::Index;
 
 // pub type GeneList = Vec<Box<Gene>>;
 pub type StandardChromosome = Chromosome<Gene>;
+pub type EvolvingChromosome = Chromosome<MutableGene>;
+trait ChromosomeExt: GeneCreationExt + GeneExt + Clone + 'static {}
 
 #[derive(Clone)]
 pub struct Chromosome<T: GeneCreationExt + GeneExt + Clone + 'static> {
@@ -135,7 +137,7 @@ mod tests {
 
     #[test]
     fn test_fitness1() {
-        let c = Chromosome::new("hola".into(), 4);
+        let c = StandardChromosome::new("hola".into(), 4);
         let g1 = Box::new(Gene::new('h'));
         let g2 = Box::new(Gene::new('a'));
         let g3 = Box::new(Gene::new('l'));
@@ -151,7 +153,7 @@ mod tests {
 
     #[test]
     fn test_fitness2() {
-        let c = Chromosome::new("hola".into(), 4);
+        let c = StandardChromosome::new("hola".into(), 4);
         let g1 = Box::new(Gene::new('h'));
         let g2 = Box::new(Gene::new('a'));
         let g3 = Box::new(Gene::new('l'));
@@ -167,7 +169,7 @@ mod tests {
 
     #[test]
     fn test_fitness3() {
-        let c = Chromosome::new("hola".into(), 4);
+        let c = StandardChromosome::new("hola".into(), 4);
         let g1 = Box::new(Gene::new('h'));
         let g2 = Box::new(Gene::new('o'));
         let g3 = Box::new(Gene::new('l'));
