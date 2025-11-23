@@ -96,7 +96,7 @@ impl<T: GeneCreationExt + GeneExt + Clone + 'static> Chromosome<T> {
     }
 }
 
-impl<T: GeneCreationExt + GeneExt + Clone> Index<usize> for Chromosome<T> {
+impl<T: GeneCreationExt + GeneExt + Clone + 'static> Index<usize> for Chromosome<T> {
     type Output = Box<T>;
 
     fn index(&self, idx: usize) -> &Self::Output {
