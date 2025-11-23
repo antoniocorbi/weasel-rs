@@ -16,29 +16,43 @@
 use crate::libweasel::charset;
 use std::fmt;
 
-pub type GeneList = Vec<Box<Gene>>;
+pub type GeneList<T> = Vec<Box<T>>;
 
 #[derive(Clone)]
 pub struct Gene {
     data: char,
 }
 
-impl Gene {
-    pub fn new(c: char) -> Self {
+pub trait GeneExt {
+    fn get(&self) -> char;
+    fn set(&mut self, c: char);
+    fn set_random_data(&mut self);
+}
+
+pub trait GeneCreationExt {
+    fn new(c: char) -> Self;
+    fn new_from_random() -> Self;
+}
+
+impl GeneCreationExt for Gene {
+    fn new(c: char) -> Self {
         Gene { data: c }
     }
-    pub fn new_from_random() -> Self {
+
+    fn new_from_random() -> Self {
         let data = charset::rand_char();
         Gene { data }
     }
+}
 
-    pub fn get(&self) -> char {
+impl GeneExt for Gene {
+    fn get(&self) -> char {
         self.data
     }
-    pub fn set(&mut self, c: char) {
+    fn set(&mut self, c: char) {
         self.data = c;
     }
-    pub fn set_random_data(&mut self) {
+    fn set_random_data(&mut self) {
         self.data = charset::rand_char();
     }
 }
@@ -50,11 +64,11 @@ impl fmt::Display for Gene {
     }
 }
 
-trait MutableGene {
+pub trait MutableGeneExt {
     fn mutate_data(&mut self, mr: f64);
 }
 
-impl MutableGene for Gene {
+impl MutableGeneExt for Gene {
     fn mutate_data(&mut self, mr: f64) {
         use rand::Rng;
         let mut rng = rand::rng();
@@ -66,11 +80,11 @@ impl MutableGene for Gene {
     }
 }
 
-impl From<&Gene> for char {
-    fn from(g: &Gene) -> Self {
-        g.get()
-    }
-}
+// impl From<&dyn GeneTrait> for char {
+//     fn from(g: &T) -> Self {
+//         g.get()
+//     }
+// }
 
 #[cfg(test)]
 mod tests {

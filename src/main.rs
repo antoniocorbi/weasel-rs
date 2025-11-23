@@ -13,7 +13,10 @@
 // You should have received a copy of the GNU General Public License
 // along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
-use weasel_rs::libweasel::{charset, gene::Gene};
+use weasel_rs::libweasel::{
+    charset,
+    gene::{Gene, GeneCreationExt, GeneExt},
+};
 
 fn main() {
     let mut g = Gene::new('a');

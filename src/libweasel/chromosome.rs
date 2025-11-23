@@ -13,45 +13,40 @@
 // You should have received a copy of the GNU General Public License
 // along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
-use crate::libweasel::gene::{Gene, GeneList};
+use crate::libweasel::gene::{Gene, GeneCreationExt, GeneExt, GeneList};
 use delegate::delegate;
 use signals2::*;
 use std::ops::Index;
 
 // pub type GeneList = Vec<Box<Gene>>;
+pub type StandardChromosome = Chromosome<Gene>;
 
 #[derive(Clone)]
-struct ChromosomeData {
+pub struct Chromosome<T: GeneCreationExt + GeneExt + Clone + 'static> {
     // -- Data members: -------------------------------------------------------
     /// The signal to emit
-    pub on_evolve_iteration: Option<Signal<(u32, u32, Box<Chromosome>)>>,
+    pub on_evolve_iteration: Option<Signal<(u32, u32, Box<Chromosome<T>>)>>,
     /// Our target string
     target_string: String,
     /// Number of copies in each evolution
     ncopies: u32,
     /// The gene list of this chromosome
-    gene_list: GeneList,
-}
-
-#[derive(Clone)]
-pub struct Chromosome {
-    // -- Data members: -------------------------------------------------------
-    cd: ChromosomeData,
+    gene_list: GeneList<T>,
 }
 
 // -- Methods: ------------------------------------------------------------
-impl ChromosomeData {
+impl<T: GeneCreationExt + GeneExt + Clone + 'static> Chromosome<T> {
     // -- Methods: ------------------------------------------------------------
     pub fn new(tstr: String, ncopies: u32) -> Self {
-        let mut cd = ChromosomeData {
+        let mut c = Chromosome {
             on_evolve_iteration: None,
             target_string: tstr,
             ncopies,
             gene_list: vec![],
         };
-        cd.create_random_genes();
+        c.create_random_genes();
 
-        cd
+        c
     }
 
     pub fn ncopies(&self) -> u32 {
@@ -65,14 +60,14 @@ impl ChromosomeData {
     fn create_genes_from_target(&mut self) {
         self.free_gene_list();
         for c in self.target_string.chars() {
-            self.gene_list.push(Box::new(Gene::new(c)));
+            self.gene_list.push(Box::new(T::new(c)));
         }
     }
 
     fn create_random_genes(&mut self) {
         self.free_gene_list();
         for _ in 0..self.target_string.len() {
-            self.gene_list.push(Box::new(Gene::new_from_random()));
+            self.gene_list.push(Box::new(T::new_from_random()));
         }
     }
 
@@ -84,12 +79,12 @@ impl ChromosomeData {
         self.gene_list.len()
     }
 
-    pub fn fitness(&self, v: &GeneList) -> u32 {
+    pub fn fitness(&self, v: &GeneList<T>) -> u32 {
         let mut d: u32 = 0;
         let mut i = 0;
 
         for c in self.target_string.chars() {
-            if c != (&*v[i]).into() {
+            if c != (&*v[i]).get() {
                 d += 1;
             }
             i += 1;
@@ -99,25 +94,11 @@ impl ChromosomeData {
     }
 }
 
-impl Index<usize> for ChromosomeData {
-    type Output = Box<Gene>;
+impl<T: GeneCreationExt + GeneExt + Clone> Index<usize> for Chromosome<T> {
+    type Output = Box<T>;
 
     fn index(&self, idx: usize) -> &Self::Output {
         &self.gene_list[idx]
-    }
-}
-
-impl Drop for ChromosomeData {
-    fn drop(&mut self) {
-        self.free_gene_list();
-    }
-}
-
-impl Index<usize> for Chromosome {
-    type Output = Box<Gene>;
-
-    fn index(&self, idx: usize) -> &Self::Output {
-        &self.cd[idx]
     }
 }
 
@@ -137,40 +118,16 @@ impl Index<usize> for Chromosome {
 //     }
 // }
 
-impl Chromosome {
-    // -- Methods: ------------------------------------------------------------
-    pub fn new(tstr: String, ncopies: u32) -> Self {
-        let cd = ChromosomeData::new(tstr, ncopies);
-        Chromosome { cd }
-    }
-
-    // Usamos el atributo 'delegate' para indicar que los siguientes
-    // métodos deben delegar en el campo 'cd'.
-
-    delegate! {
-        to self.cd {
-          // Se delegan estos métodos específicos
-          pub fn ncopies(&self) -> u32;
-          pub fn target(&self) -> String;
-          // Se delega este método mutable
-          fn create_genes_from_target(&mut self);
-          fn create_random_genes(&mut self);
-          pub fn size(&self) -> usize;
-          pub fn fitness(&self, v: &GeneList) -> u32;
-        }
-    }
-}
-
 #[cfg(test)]
 mod tests {
     use super::*;
 
     #[test]
     fn test_index1() {
-        let mut c = Chromosome::new("hola".into(), 4);
+        let mut c = StandardChromosome::new("hola".into(), 4);
         c.create_genes_from_target();
-        let gc0 = <&Gene as Into<char>>::into(&*c[0]);
-        let gc1: char = (&*c[1]).into();
+        let gc0 = (&*c[0]).get();
+        let gc1 = (&*c[1]).get();
 
         assert_eq!(gc0, 'h');
         assert_eq!(gc1, 'o');
