@@ -125,6 +125,16 @@ mod tests {
     use super::*;
 
     #[test]
+    fn test_evolvingchromosome() {
+        let mut c = EvolvingChromosome::new("hola".into(), 4);
+        c.create_genes_from_target();
+        let gc0 = (&*c[0]).get();
+        let gc1 = (&*c[1]).get();
+
+        assert_eq!(gc0, 'h');
+        assert_eq!(gc1, 'o');
+    }
+
     fn test_index1() {
         let mut c = StandardChromosome::new("hola".into(), 4);
         c.create_genes_from_target();
