@@ -21,7 +21,7 @@ use std::fmt;
 pub type GeneList<T> = Vec<Box<T>>;
 
 // -- Classes: ------------------------------------------------------------
-#[derive(Clone)]
+#[derive(Clone, Debug)]
 pub struct Gene {
     data: char,
 }

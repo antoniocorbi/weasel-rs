@@ -14,17 +14,17 @@
 // along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 use crate::libweasel::gene::{Gene, GeneCreationExt, GeneExt, GeneList, MutableGene};
-use delegate::delegate;
+// use delegate::delegate;
 use signals2::*;
-use std::ops::Index;
+use std::ops::{Index, IndexMut};
 
 // pub type GeneList = Vec<Box<Gene>>;
 pub type StandardChromosome = Chromosome<Gene>;
 pub type EvolvingChromosome = Chromosome<MutableGene>;
-trait ChromosomeExt: GeneCreationExt + GeneExt + Clone + 'static {}
+pub trait ChromosomeExt: GeneCreationExt + GeneExt + Clone + 'static {}
 
 #[derive(Clone)]
-pub struct Chromosome<T: GeneCreationExt + GeneExt + Clone + 'static> {
+pub struct Chromosome<T: ChromosomeExt> {
     // -- Data members: -------------------------------------------------------
     /// The signal to emit
     pub on_evolve_iteration: Option<Signal<(u32, u32, Box<Chromosome<T>>)>>,
@@ -36,8 +36,11 @@ pub struct Chromosome<T: GeneCreationExt + GeneExt + Clone + 'static> {
     gene_list: GeneList<T>,
 }
 
-// -- Methods: ------------------------------------------------------------
-impl<T: GeneCreationExt + GeneExt + Clone + 'static> Chromosome<T> {
+// -- Impl. blocks: -------------------------------------------------------
+impl ChromosomeExt for Gene {}
+impl ChromosomeExt for MutableGene {}
+
+impl<T: ChromosomeExt> Chromosome<T> {
     // -- Methods: ------------------------------------------------------------
     pub fn new(tstr: String, ncopies: u32) -> Self {
         let mut c = Chromosome {
@@ -59,11 +62,18 @@ impl<T: GeneCreationExt + GeneExt + Clone + 'static> Chromosome<T> {
         self.target_string.clone()
     }
 
+    #[allow(unused)]
     fn create_genes_from_target(&mut self) {
         self.free_gene_list();
-        for c in self.target_string.chars() {
-            self.gene_list.push(Box::new(T::new(c)));
-        }
+        // for c in self.target_string.chars() {
+        //     self.gene_list.push(Box::new(T::new(c)));
+        // }
+
+        self.gene_list = self
+            .target_string
+            .chars()
+            .map(|c| Box::new(T::new(c)))
+            .collect();
     }
 
     fn create_random_genes(&mut self) {
@@ -96,11 +106,17 @@ impl<T: GeneCreationExt + GeneExt + Clone + 'static> Chromosome<T> {
     }
 }
 
-impl<T: GeneCreationExt + GeneExt + Clone + 'static> Index<usize> for Chromosome<T> {
-    type Output = Box<T>;
+impl<T: ChromosomeExt> Index<usize> for Chromosome<T> {
+    type Output = T;
 
     fn index(&self, idx: usize) -> &Self::Output {
-        &self.gene_list[idx]
+        &*self.gene_list[idx]
+    }
+}
+
+impl<T: ChromosomeExt> IndexMut<usize> for Chromosome<T> {
+    fn index_mut(&mut self, idx: usize) -> &mut Self::Output {
+        &mut *self.gene_list[idx]
     }
 }
 
@@ -125,21 +141,32 @@ mod tests {
     use super::*;
 
     #[test]
-    fn test_evolvingchromosome() {
+    fn test_evolvingchromosome1() {
         let mut c = EvolvingChromosome::new("hola".into(), 4);
         c.create_genes_from_target();
-        let gc0 = (&*c[0]).get();
-        let gc1 = (&*c[1]).get();
+        let gc0 = (c[0]).get();
+        let gc1 = (c[1]).get();
 
         assert_eq!(gc0, 'h');
         assert_eq!(gc1, 'o');
     }
 
+    #[test]
+    fn test_evolvingchromosome2() {
+        let mut c = EvolvingChromosome::new("hola".into(), 4);
+        c.create_genes_from_target();
+        c[0] = MutableGene::new('l');
+        let gc0 = c[0].get();
+
+        assert_eq!(gc0, 'l');
+    }
+
+    #[test]
     fn test_index1() {
         let mut c = StandardChromosome::new("hola".into(), 4);
         c.create_genes_from_target();
-        let gc0 = (&*c[0]).get();
-        let gc1 = (&*c[1]).get();
+        let gc0: char = (&c[0]).into();
+        let gc1 = c[1].get();
 
         assert_eq!(gc0, 'h');
         assert_eq!(gc1, 'o');
