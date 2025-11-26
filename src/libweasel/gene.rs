@@ -14,6 +14,7 @@
 // along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 use delegate::delegate;
+use std::ops::{Deref, DerefMut};
 
 use crate::libweasel::charset;
 use std::fmt;
@@ -46,6 +47,21 @@ pub trait GeneCreationExt {
 }
 
 // -- Impl. blocks: -------------------------------------------------------
+
+impl DerefMut for Gene {
+    fn deref_mut(&mut self) -> &mut Self::Target {
+        &mut self.data
+    }
+}
+
+impl Deref for Gene {
+    type Target = char;
+
+    fn deref(&self) -> &Self::Target {
+        &self.data
+    }
+}
+
 impl GeneCreationExt for Gene {
     fn new(c: char) -> Self {
         Gene { data: c }
@@ -139,5 +155,22 @@ mod tests {
         g.mutate_data(0.8);
         let c: char = (&g).into();
         assert!(c != 'a' || g.get() == 'a');
+    }
+
+    #[test]
+    fn test_gene_deref() {
+        let g = Gene::new('a');
+        let c: char = *g;
+
+        assert_eq!(c, 'a');
+    }
+
+    #[test]
+    fn test_gene_derefmut() {
+        let mut g = Gene::new('a');
+        *g = 'z';
+        let c: char = *g;
+
+        assert_eq!(c, 'z');
     }
 }
