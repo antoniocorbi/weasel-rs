@@ -18,6 +18,8 @@ use weasel_rs::libweasel::{
     gene::{Gene, GeneCreationExt, GeneExt},
 };
 
+use weasel_rs::libweasel::chromosome::StandardChromosome;
+
 fn main() {
     let mut g = Gene::new('a');
     println!("Hello weasel with gene('a'): {}", g.get());
@@ -34,4 +36,8 @@ fn main() {
 
     println!("_ is allowed char? {}", charset::in_char_set('_'));
     println!("9 is allowed char? {}", charset::in_char_set('9'));
+
+    print!("Chromosome: ");
+    let c = StandardChromosome::new("hola".into(), 4);
+    println!("{c}");
 }

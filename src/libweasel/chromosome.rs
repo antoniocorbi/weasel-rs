@@ -16,6 +16,7 @@
 use crate::libweasel::gene::{Gene, GeneCreationExt, GeneExt, GeneList, MutableGene};
 // use delegate::delegate;
 use signals2::*;
+use std::fmt;
 use std::ops::{Index, IndexMut};
 
 // pub type GeneList = Vec<Box<Gene>>;
@@ -39,6 +40,18 @@ pub struct Chromosome<T: ChromosomeExt> {
 // -- Impl. blocks: -------------------------------------------------------
 impl ChromosomeExt for Gene {}
 impl ChromosomeExt for MutableGene {}
+
+impl<T: ChromosomeExt> fmt::Display for Chromosome<T> {
+    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
+        let mut gstr = String::new();
+        // Escribimos en el formateador 'f' la representación que queremos
+        self.gene_list.iter().for_each(|e| {
+            let c = <T as GeneExt>::get(e);
+            gstr.push(c);
+        });
+        write!(f, "{}", gstr)
+    }
+}
 
 impl<T: ChromosomeExt> Chromosome<T> {
     // -- Methods: ------------------------------------------------------------
@@ -74,6 +87,18 @@ impl<T: ChromosomeExt> Chromosome<T> {
             .chars()
             .map(|c| Box::new(T::new(c)))
             .collect();
+    }
+
+    #[allow(unused)]
+    fn get_genes(&self) -> String {
+        let mut gstr = String::new();
+
+        self.gene_list.iter().for_each(|e| {
+            let c = <T as GeneExt>::get(e);
+            gstr.push(c);
+        });
+
+        gstr
     }
 
     fn create_random_genes(&mut self) {
@@ -139,6 +164,14 @@ impl<T: ChromosomeExt> IndexMut<usize> for Chromosome<T> {
 #[cfg(test)]
 mod tests {
     use super::*;
+
+    #[test]
+    fn test_get_genes() {
+        let c = StandardChromosome::new("hola".into(), 4);
+        let gstr = c.get_genes();
+
+        assert_eq!(gstr.len(), "hola".len());
+    }
 
     #[test]
     fn test_evolvingchromosome1() {
