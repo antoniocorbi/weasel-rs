@@ -13,7 +13,9 @@
 // You should have received a copy of the GNU General Public License
 // along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
-use crate::libweasel::gene::{Gene, GeneCreationExt, GeneExt, GeneList, MutableGene};
+use crate::libweasel::gene::{
+    Gene, GeneCreationExt, GeneExt, GeneList, MutableGene, MutableGeneExt,
+};
 // use delegate::delegate;
 use signals2::*;
 use std::fmt;
@@ -50,6 +52,20 @@ impl<T: ChromosomeExt> fmt::Display for Chromosome<T> {
             gstr.push(c);
         });
         write!(f, "{}", gstr)
+    }
+}
+
+impl Chromosome<MutableGene> {
+    fn mutate_genes(&self, v: &mut GeneList<MutableGene>) {
+        for i in 0..self.size() {
+            let c = Box::new(self[i].clone());
+
+            v[i].mutate_data(self.mr());
+        }
+    }
+
+    fn mr(&self) -> f64 {
+        0.7
     }
 }
 
