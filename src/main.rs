@@ -13,14 +13,14 @@
 // You should have received a copy of the GNU General Public License
 // along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
+use signals2::Connect2;
 use weasel_rs::libweasel::{
     charset,
+    chromosome::{EvolvingChromosome, StandardChromosome},
     gene::{Gene, GeneCreationExt, GeneExt},
 };
 
-use weasel_rs::libweasel::chromosome::StandardChromosome;
-
-fn main() {
+fn check1() {
     let mut g = Gene::new('a');
     println!("Hello weasel with gene('a'): {}", g.get());
     g.set_random_data();
@@ -40,4 +40,18 @@ fn main() {
     print!("Chromosome: ");
     let c = StandardChromosome::new("hola".into(), 4);
     println!("{c}");
+}
+
+fn check2() {
+    let mut ec = EvolvingChromosome::new(String::from("la casa de mi madre esta vacia"), 100);
+
+    ec.on_evolve_iteration.connect(|it, bf| {
+        println!("On it.:{it} fitness is {bf}");
+    });
+
+    ec.evolve();
+}
+
+fn main() {
+    check2();
 }

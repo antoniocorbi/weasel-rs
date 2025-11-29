@@ -30,7 +30,7 @@ pub trait ChromosomeExt: GeneCreationExt + GeneExt + Clone + 'static {}
 pub struct Chromosome<T: ChromosomeExt> {
     // -- Data members: -------------------------------------------------------
     /// The signal to emit
-    pub on_evolve_iteration: Option<Signal<(u32, u32, Box<Chromosome<T>>)>>,
+    pub on_evolve_iteration: Signal<(u32, u32)>,
     /// Our target string
     target_string: String,
     /// Number of copies in each evolution
@@ -60,20 +60,60 @@ impl Chromosome<MutableGene> {
         for i in 0..self.size() {
             let c = Box::new(self[i].clone());
 
+            v[i].set((*c).get());
             v[i].mutate_data(self.mr());
         }
     }
 
     fn mr(&self) -> f64 {
-        0.7
+        0.05
+    }
+
+    pub fn evolve(&mut self) {
+        let mut it: u32 = 0;
+        let mut glc: GeneList<MutableGene> = vec![];
+        let mut bgl: GeneList<MutableGene> = vec![];
+
+        self.gene_list.iter().for_each(|e| {
+            let mg1 = Box::new(MutableGene::new(e.get()));
+            let mg2 = Box::new(MutableGene::new(e.get()));
+            glc.push(mg1);
+            bgl.push(mg2);
+        });
+
+        let mut bf: u32 = self.fitness(&glc);
+
+        'evolution: loop {
+            it += 1;
+            for _ in 0..self.ncopies() {
+                self.mutate_genes(&mut glc);
+                let f = self.fitness(&glc);
+                if f < bf {
+                    bf = f;
+
+                    for i in 0..self.size() {
+                        bgl[i].set(glc[i].get());
+                    }
+
+                    if bf == 0 {
+                        // bestfit == 0 means the chromosome is equal to target-string.
+                        break 'evolution;
+                    }
+                }
+            }
+
+            // Emit the signal
+            self.on_evolve_iteration.emit(it, bf);
+        }
     }
 }
 
 impl<T: ChromosomeExt> Chromosome<T> {
     // -- Methods: ------------------------------------------------------------
     pub fn new(tstr: String, ncopies: u32) -> Self {
+        let on_evolve_iteration = Signal::new();
         let mut c = Chromosome {
-            on_evolve_iteration: None,
+            on_evolve_iteration,
             target_string: tstr,
             ncopies,
             gene_list: vec![],
