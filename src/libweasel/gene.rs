@@ -27,7 +27,7 @@ pub struct Gene {
     data: char,
 }
 
-#[derive(Clone)]
+#[derive(Clone, Debug)]
 pub struct MutableGene(Gene);
 
 // -- Traits: -------------------------------------------------------------
@@ -81,7 +81,9 @@ impl GeneExt for Gene {
         self.data = c;
     }
     fn set_random_data(&mut self) {
+        let oldd = self.get();
         self.data = charset::rand_char();
+        // println!("srdd: old:{oldd}, new:{}", self.data);
     }
 }
 
@@ -127,6 +129,7 @@ impl MutableGeneExt for MutableGene {
         let p = rng.random_range(0.0..=1.0);
 
         if p < mr {
+            //println!("mutate data: p: {p} mr: {mr}");
             self.set_random_data();
         }
     }

@@ -58,9 +58,10 @@ impl<T: ChromosomeExt> fmt::Display for Chromosome<T> {
 impl Chromosome<MutableGene> {
     fn mutate_genes(&self, v: &mut GeneList<MutableGene>) {
         for i in 0..self.size() {
-            let c = Box::new(self[i].clone());
+            //let c = Box::new(self[i].clone());
+            let c = &self[i];
 
-            v[i].set((*c).get());
+            v[i].set(c.get());
             v[i].mutate_data(self.mr());
         }
     }
@@ -71,8 +72,8 @@ impl Chromosome<MutableGene> {
 
     pub fn evolve(&mut self) {
         let mut it: u32 = 0;
-        let mut glc: GeneList<MutableGene> = vec![];
-        let mut bgl: GeneList<MutableGene> = vec![];
+        let mut glc: GeneList<MutableGene> = vec![]; // Gene list copy
+        let mut bgl: GeneList<MutableGene> = vec![]; // Best Gene list copy
 
         self.gene_list.iter().for_each(|e| {
             let mg1 = Box::new(MutableGene::new(e.get()));
@@ -81,6 +82,9 @@ impl Chromosome<MutableGene> {
             bgl.push(mg2);
         });
 
+        // println!("glc: {:?}", glc);
+
+        // Best fit til now.
         let mut bf: u32 = self.fitness(&glc);
 
         'evolution: loop {
@@ -88,12 +92,17 @@ impl Chromosome<MutableGene> {
             for _ in 0..self.ncopies() {
                 self.mutate_genes(&mut glc);
                 let f = self.fitness(&glc);
+
+                println!("Loop: {it} - f: {f} - bf: {bf}");
+
                 if f < bf {
                     bf = f;
 
                     for i in 0..self.size() {
                         bgl[i].set(glc[i].get());
                     }
+
+                    println!("bgl: {:?}", bgl);
 
                     if bf == 0 {
                         // bestfit == 0 means the chromosome is equal to target-string.
