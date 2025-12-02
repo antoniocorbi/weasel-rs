@@ -122,9 +122,9 @@ impl Chromosome<MutableGene> {
             self.on_evolve_iteration.emit(it, bf);
 
             // Copy best fit genes into chromosome's genes
-            for i in 0..self.size() {
-                self[i].set(bgl[i].get());
-            }
+            // for i in 0..self.size() {
+            //     self[i].set(bgl[i].get());
+            // }
 
             self.gene_list.iter_mut().enumerate().for_each(|(i, g)| {
                 g.set(bgl[i].get());
