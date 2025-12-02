@@ -67,7 +67,7 @@ impl Chromosome<MutableGene> {
     }
 
     fn mr(&self) -> f64 {
-        0.05
+        0.15
     }
 
     pub fn evolve(&mut self) {
@@ -87,13 +87,16 @@ impl Chromosome<MutableGene> {
         // Best fit til now.
         let mut bf: u32 = self.fitness(&glc);
 
-        'evolution: loop {
+        loop {
             it += 1;
             for _ in 0..self.ncopies() {
                 self.mutate_genes(&mut glc);
                 let f = self.fitness(&glc);
 
-                println!("Loop: {it} - f: {f} - bf: {bf}");
+                // println!("Loop: {it} - f: {f} - bf: {bf} - {:#?}", bgl);
+                // if it % 100 == 0 {
+                //     println!("Loop: {it} - f: {f} - bf: {bf}: {}", self.get_genes());
+                // }
 
                 if f < bf {
                     bf = f;
@@ -102,17 +105,35 @@ impl Chromosome<MutableGene> {
                         bgl[i].set(glc[i].get());
                     }
 
-                    println!("bgl: {:?}", bgl);
+                    println!(
+                        "it: {it} - bf: {bf} - bgl: {:?}",
+                        Chromosome::gene_list_as_string(&bgl)
+                    );
 
                     if bf == 0 {
                         // bestfit == 0 means the chromosome is equal to target-string.
-                        break 'evolution;
+                        println!("Found: {}", bf);
+                        break;
                     }
                 }
             }
 
             // Emit the signal
             self.on_evolve_iteration.emit(it, bf);
+
+            // Copy best fit genes into chromosome's genes
+            for i in 0..self.size() {
+                self[i].set(bgl[i].get());
+            }
+
+            self.gene_list.iter_mut().enumerate().for_each(|(i, g)| {
+                g.set(bgl[i].get());
+            });
+
+            //check if we've got the target string
+            if bf == 0 {
+                break;
+            }
         }
     }
 }
@@ -155,15 +176,19 @@ impl<T: ChromosomeExt> Chromosome<T> {
     }
 
     #[allow(unused)]
-    fn get_genes(&self) -> String {
+    fn gene_list_as_string(gene_list: &GeneList<T>) -> String {
         let mut gstr = String::new();
 
-        self.gene_list.iter().for_each(|e| {
+        gene_list.iter().for_each(|e| {
             let c = <T as GeneExt>::get(e);
             gstr.push(c);
         });
 
         gstr
+    }
+
+    fn get_genes(&self) -> String {
+        Self::gene_list_as_string(&self.gene_list)
     }
 
     fn create_random_genes(&mut self) {

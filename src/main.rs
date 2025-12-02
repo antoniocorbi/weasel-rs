@@ -43,11 +43,12 @@ fn check1() {
 }
 
 fn check2() {
-    let mut ec = EvolvingChromosome::new(String::from("hola"), 100);
+    let s = String::from("Hoy hace una semana que mi madre se nos fue");
+    let mut ec = EvolvingChromosome::new(s, 700);
 
-    ec.on_evolve_iteration.connect(|it, bf| {
-        println!("On it.:{it} fitness is {bf}");
-    });
+    // ec.on_evolve_iteration.connect(|it, bf| {
+    //     println!("On it.:{it} fitness is {bf}");
+    // });
 
     ec.evolve();
 }

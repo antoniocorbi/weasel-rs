@@ -81,7 +81,7 @@ impl GeneExt for Gene {
         self.data = c;
     }
     fn set_random_data(&mut self) {
-        let oldd = self.get();
+        //let oldd = self.get();
         self.data = charset::rand_char();
         // println!("srdd: old:{oldd}, new:{}", self.data);
     }
@@ -126,7 +126,8 @@ impl MutableGeneExt for MutableGene {
     fn mutate_data(&mut self, mr: f64) {
         use rand::Rng;
         let mut rng = rand::rng();
-        let p = rng.random_range(0.0..=1.0);
+        // let p = rng.random_range(0.0..=1.0);
+        let p: f64 = rng.random();
 
         if p < mr {
             //println!("mutate data: p: {p} mr: {mr}");
