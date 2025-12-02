@@ -13,10 +13,10 @@
 // You should have received a copy of the GNU General Public License
 // along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
-use signals2::Connect2;
+use signals2::*;
 use weasel_rs::libweasel::{
     charset,
-    chromosome::{EvolvingChromosome, StandardChromosome},
+    chromosome::{ChromosomeData, EvolvingChromosome, StandardChromosome},
     gene::{Gene, GeneCreationExt, GeneExt},
 };
 
@@ -46,9 +46,10 @@ fn check2() {
     let s = String::from("Hoy hace una semana que mi madre se nos fue");
     let mut ec = EvolvingChromosome::new(s, 700);
 
-    // ec.on_evolve_iteration.connect(|it, bf| {
-    //     println!("On it.:{it} fitness is {bf}");
-    // });
+    ec.on_evolve_iteration.connect(|it, bf, cdata| {
+        println!("On it.:{it} fitness is {bf} : {}", cdata.current_string);
+        //println!("On it.:{it} fitness is {bf}");
+    });
 
     ec.evolve();
 }

@@ -27,10 +27,18 @@ pub type EvolvingChromosome = Chromosome<MutableGene>;
 pub trait ChromosomeExt: GeneCreationExt + GeneExt + Clone + 'static {}
 
 #[derive(Clone)]
+pub struct ChromosomeData {
+    pub target_string: String,
+    pub current_string: String,
+    /// Number of copies in each evolution
+    pub ncopies: u32,
+}
+
+#[derive(Clone)]
 pub struct Chromosome<T: ChromosomeExt> {
     // -- Data members: -------------------------------------------------------
     /// The signal to emit
-    pub on_evolve_iteration: Signal<(u32, u32)>,
+    pub on_evolve_iteration: Signal<(u32, u32, ChromosomeData)>,
     /// Our target string
     target_string: String,
     /// Number of copies in each evolution
@@ -105,10 +113,10 @@ impl Chromosome<MutableGene> {
                         bgl[i].set(glc[i].get());
                     }
 
-                    println!(
-                        "it: {it} - bf: {bf} - bgl: {:?}",
-                        Chromosome::gene_list_as_string(&bgl)
-                    );
+                    // println!(
+                    //     "it: {it} - bf: {bf} - bgl: {:?}",
+                    //     Chromosome::gene_list_as_string(&bgl)
+                    // );
 
                     if bf == 0 {
                         // bestfit == 0 means the chromosome is equal to target-string.
@@ -119,7 +127,12 @@ impl Chromosome<MutableGene> {
             }
 
             // Emit the signal
-            self.on_evolve_iteration.emit(it, bf);
+            let cdata = ChromosomeData {
+                target_string: self.target_string.clone(),
+                ncopies: self.ncopies,
+                current_string: Chromosome::gene_list_as_string(&bgl).clone(),
+            };
+            self.on_evolve_iteration.emit(it, bf, cdata);
 
             // Copy best fit genes into chromosome's genes
             // for i in 0..self.size() {
