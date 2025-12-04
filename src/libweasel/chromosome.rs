@@ -20,6 +20,7 @@ use crate::libweasel::gene::{
 use signals2::*;
 use std::fmt;
 use std::ops::{Index, IndexMut};
+use std::rc::Rc;
 
 // pub type GeneList = Vec<Box<Gene>>;
 pub type StandardChromosome = Chromosome<Gene>;
@@ -27,18 +28,10 @@ pub type EvolvingChromosome = Chromosome<MutableGene>;
 pub trait ChromosomeExt: GeneCreationExt + GeneExt + Clone + 'static {}
 
 #[derive(Clone)]
-pub struct ChromosomeData {
-    pub target_string: String,
-    pub current_string: String,
-    /// Number of copies in each evolution
-    pub ncopies: u32,
-}
-
-#[derive(Clone)]
 pub struct Chromosome<T: ChromosomeExt> {
     // -- Data members: -------------------------------------------------------
-    /// The signal to emit
-    pub on_evolve_iteration: Signal<(u32, u32, ChromosomeData)>,
+    /// The signal to emit; (it, best_fit, current_chromosome)
+    pub on_evolve_iteration: Signal<(u32, u32, Rc<Self>)>,
     /// Our target string
     target_string: String,
     /// Number of copies in each evolution
@@ -126,22 +119,13 @@ impl Chromosome<MutableGene> {
                 }
             }
 
-            // Emit the signal
-            let cdata = ChromosomeData {
-                target_string: self.target_string.clone(),
-                ncopies: self.ncopies,
-                current_string: Chromosome::gene_list_as_string(&bgl).clone(),
-            };
-            self.on_evolve_iteration.emit(it, bf, cdata);
-
-            // Copy best fit genes into chromosome's genes
-            // for i in 0..self.size() {
-            //     self[i].set(bgl[i].get());
-            // }
-
             self.gene_list.iter_mut().enumerate().for_each(|(i, g)| {
                 g.set(bgl[i].get());
             });
+
+            // Emit the signal
+            let self_rc = Rc::new(self.clone());
+            self.on_evolve_iteration.emit(it, bf, self_rc.clone());
 
             //check if we've got the target string
             if bf == 0 {
@@ -200,7 +184,7 @@ impl<T: ChromosomeExt> Chromosome<T> {
         gstr
     }
 
-    fn get_genes(&self) -> String {
+    pub fn get_genes(&self) -> String {
         Self::gene_list_as_string(&self.gene_list)
     }
 

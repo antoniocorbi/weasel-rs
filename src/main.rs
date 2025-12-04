@@ -16,7 +16,7 @@
 use signals2::*;
 use weasel_rs::libweasel::{
     charset,
-    chromosome::{ChromosomeData, EvolvingChromosome, StandardChromosome},
+    chromosome::{EvolvingChromosome, StandardChromosome},
     gene::{Gene, GeneCreationExt, GeneExt},
 };
 
@@ -46,8 +46,8 @@ fn check2() {
     let s = String::from("Hoy hace una semana que mi madre se nos fue");
     let mut ec = EvolvingChromosome::new(s, 700);
 
-    ec.on_evolve_iteration.connect(|it, bf, cdata| {
-        println!("On it.:{it} fitness is {bf} : {}", cdata.current_string);
+    ec.on_evolve_iteration.connect(|it, bf, chromosome| {
+        println!("On it.:{it} fitness is {bf} : {}", chromosome.get_genes());
         //println!("On it.:{it} fitness is {bf}");
     });
 
