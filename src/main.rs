@@ -13,6 +13,7 @@
 // You should have received a copy of the GNU General Public License
 // along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
+use colored::Colorize;
 use signals2::*;
 use weasel_rs::libweasel::{
     charset,
@@ -42,18 +43,47 @@ fn check1() {
     println!("{c}");
 }
 
-fn check2() {
-    let s = String::from("Hoy hace una semana que mi madre se nos fue");
-    let mut ec = EvolvingChromosome::new(s, 700);
+fn check_evolve() {
+    let s = String::from("Esta combinacion de genes permite respirar fuera del agua");
+    let mut ec = EvolvingChromosome::new(s, 800).with_mr(0.080);
 
     ec.on_evolve_iteration.connect(|it, bf, chromosome| {
-        println!("On it.:{it} fitness is {bf} : {}", chromosome.get_genes());
+        println!(
+            // "On it.:{it} fitness is {bf} and mr: {}: {}",
+            // chromosome.mr(),
+            "{} ({bf})",
+            chromosome.get_genes_colored()
+        );
         //println!("On it.:{it} fitness is {bf}");
     });
 
     ec.evolve();
 }
 
+fn check_colors() {
+    let parte1 = "¡Hola".yellow().bold();
+    let parte2 = " Mundo!".cyan().italic();
+    let resultado_format = format!("{}{}", parte1, parte2) + " > FIN.";
+    println!("Resultado format: {resultado_format}");
+
+    let mut cs = "this is red on blue ❤🧡💛💚💙💜".white().on_bright_red();
+    println!("{cs}");
+    println!("{}", "you can also make bold comments".bold());
+    println!("{}", "this is blue".blue());
+    println!(
+        "{}",
+        "you can specify color by string"
+            .color("black")
+            .on_color("yellow")
+    );
+    println!(
+        "{}",
+        format!("{} {} !", "it".green(), "works".blue().bold())
+    );
+}
+
 fn main() {
-    check2();
+    // check1();
+    // check_colors();
+    check_evolve();
 }

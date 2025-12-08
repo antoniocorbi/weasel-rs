@@ -16,6 +16,7 @@
 use crate::libweasel::gene::{
     Gene, GeneCreationExt, GeneExt, GeneList, MutableGene, MutableGeneExt,
 };
+use colored::Colorize;
 // use delegate::delegate;
 use signals2::*;
 use std::fmt;
@@ -38,6 +39,8 @@ pub struct Chromosome<T: ChromosomeExt> {
     ncopies: u32,
     /// The gene list of this chromosome
     gene_list: GeneList<T>,
+    /// Mutation rate
+    mr: f64,
 }
 
 // -- Impl. blocks: -------------------------------------------------------
@@ -57,6 +60,11 @@ impl<T: ChromosomeExt> fmt::Display for Chromosome<T> {
 }
 
 impl Chromosome<MutableGene> {
+    pub fn with_mr(mut self, mr: f64) -> Self {
+        self.mr = mr;
+        self
+    }
+
     fn mutate_genes(&self, v: &mut GeneList<MutableGene>) {
         for i in 0..self.size() {
             //let c = Box::new(self[i].clone());
@@ -67,8 +75,8 @@ impl Chromosome<MutableGene> {
         }
     }
 
-    fn mr(&self) -> f64 {
-        0.15
+    pub fn mr(&self) -> f64 {
+        self.mr
     }
 
     pub fn evolve(&mut self) {
@@ -113,7 +121,7 @@ impl Chromosome<MutableGene> {
 
                     if bf == 0 {
                         // bestfit == 0 means the chromosome is equal to target-string.
-                        println!("Found: {}", bf);
+                        // println!("Found: {}", bf);
                         break;
                     }
                 }
@@ -127,7 +135,7 @@ impl Chromosome<MutableGene> {
             let self_rc = Rc::new(self.clone());
             self.on_evolve_iteration.emit(it, bf, self_rc.clone());
 
-            //check if we've got the target string
+            //check if we've got the target string: be (best fit) == 0.
             if bf == 0 {
                 break;
             }
@@ -144,6 +152,7 @@ impl<T: ChromosomeExt> Chromosome<T> {
             target_string: tstr,
             ncopies,
             gene_list: vec![],
+            mr: 0.0,
         };
         c.create_random_genes();
 
@@ -186,6 +195,29 @@ impl<T: ChromosomeExt> Chromosome<T> {
 
     pub fn get_genes(&self) -> String {
         Self::gene_list_as_string(&self.gene_list)
+    }
+
+    /// Mark wrong genes with a different color.
+    pub fn get_genes_colored(&self) -> String {
+        let gs = Self::gene_list_as_string(&self.gene_list);
+        let ts = self.target();
+        let mut coloredstr = "".to_owned();
+
+        // 1. Get the character iterators for both strings.
+        let chars_gs = gs.chars();
+        let chars_ts = ts.chars();
+
+        chars_gs.zip(chars_ts).for_each(|(g, t)| {
+            let mut charstr: String;
+            charstr = format!("{}", g);
+            if g != t {
+                // Char in gene sequence is different from the one in target string
+                charstr = format!("{}", charstr.red());
+            }
+            coloredstr += &charstr;
+        });
+
+        coloredstr
     }
 
     fn create_random_genes(&mut self) {
