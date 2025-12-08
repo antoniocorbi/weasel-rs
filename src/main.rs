@@ -48,10 +48,11 @@ fn check_evolve() {
     let mut ec = EvolvingChromosome::new(s, 800).with_mr(0.080);
 
     ec.on_evolve_iteration.connect(|it, bf, chromosome| {
+        let size = chromosome.size();
         println!(
             // "On it.:{it} fitness is {bf} and mr: {}: {}",
             // chromosome.mr(),
-            "{} ({bf})",
+            "{} ({bf}/{size}) @{it}",
             chromosome.get_genes_colored()
         );
         //println!("On it.:{it} fitness is {bf}");
