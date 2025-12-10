@@ -19,7 +19,7 @@ use std::string::String;
 //use rand::prelude::*;
 
 static CHARSET: Lazy<String> = Lazy::new(|| {
-    let s = " ,.;:_-abcdefghijklmnñopqrstuvwxyzABCDEFGHIJKLMNÑOPQRSTUVWXYZ0123456789";
+    let s = r#" "',.;:_-?abcdefghijklmnñopqrstuvwxyzABCDEFGHIJKLMNÑOPQRSTUVWXYZ0123456789"#;
 
     format!("{}", s)
 });

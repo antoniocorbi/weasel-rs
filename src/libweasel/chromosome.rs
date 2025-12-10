@@ -135,7 +135,7 @@ impl Chromosome<MutableGene> {
             let self_rc = Rc::new(self.clone());
             self.on_evolve_iteration.emit(it, bf, self_rc.clone());
 
-            //check if we've got the target string: be (best fit) == 0.
+            //check if we've got the target string: bf (best fit) == 0.
             if bf == 0 {
                 break;
             }

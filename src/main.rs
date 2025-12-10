@@ -13,10 +13,12 @@
 // You should have received a copy of the GNU General Public License
 // along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
+use std::fmt::Arguments;
+
 use colored::Colorize;
 use signals2::*;
 use weasel_rs::libweasel::{
-    charset,
+    arguments, charset,
     chromosome::{EvolvingChromosome, StandardChromosome},
     gene::{Gene, GeneCreationExt, GeneExt},
 };
@@ -44,8 +46,11 @@ fn check1() {
 }
 
 fn check_evolve() {
-    let s = String::from("Esta combinacion de genes permite respirar fuera del agua");
-    let mut ec = EvolvingChromosome::new(s, 800).with_mr(0.080);
+    let args = arguments::Arguments::from_app_args();
+    let s = args.sentence().to_owned();
+    let nc = args.ncopies();
+    let mr = args.mr();
+    let mut ec = EvolvingChromosome::new(s, nc).with_mr(mr);
 
     ec.on_evolve_iteration.connect(|it, bf, chromosome| {
         let size = chromosome.size();
@@ -83,8 +88,17 @@ fn check_colors() {
     );
 }
 
+fn check_args() {
+    let args = arguments::Arguments::from_app_args();
+    println!("Sentence: {}", args.sentence());
+    println!("Mutation rate: {}", args.mr());
+    println!("Number of copies: {}", args.ncopies());
+    println!("Encoded output?: {}", args.encoded());
+}
+
 fn main() {
     // check1();
     // check_colors();
+    // check_args();
     check_evolve();
 }
