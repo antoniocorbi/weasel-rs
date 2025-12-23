@@ -202,17 +202,17 @@ impl<T: ChromosomeExt> Chromosome<T> {
         let gs = Self::gene_list_as_string(&self.gene_list);
         let ts = self.target();
         let mut coloredstr = "".to_owned();
+        let mut charstr: String = "".into();
 
         // 1. Get the character iterators for both strings.
         let chars_gs = gs.chars();
         let chars_ts = ts.chars();
 
         chars_gs.zip(chars_ts).for_each(|(g, t)| {
-            let mut charstr: String;
             charstr = format!("{}", g);
             if g != t {
                 // Char in gene sequence is different from the one in target string
-                charstr = format!("{}", charstr.red());
+                charstr = format!("{}", charstr.black().on_white());
             }
             coloredstr += &charstr;
         });
