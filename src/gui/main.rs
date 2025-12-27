@@ -24,7 +24,7 @@ fn main() -> eframe::Result {
     eframe::run_native(
         "Weasel GUI",
         native_options,
-      Box::new(|cc| Ok(Box::new(app::TemplateApp::new(cc)))),
+      Box::new(|cc| Ok(Box::new(app::WeaselApp::new(cc)))),
     )
 }
 
@@ -54,7 +54,7 @@ fn main() {
             .start(
                 canvas,
                 web_options,
-              Box::new(|cc| Ok(Box::new(weasel_rs::main::TemplateApp::new(cc)))),
+              Box::new(|cc| Ok(Box::new(weasel_rs::main::WeaselApp::new(cc)))),
             )
             .await;
 
