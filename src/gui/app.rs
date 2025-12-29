@@ -15,21 +15,31 @@
 
 // -- Uses: ---------------------------------------------------------------
 use egui::Color32;
+use signals2::*;
+use weasel_rs::libweasel::{
+    arguments, charset,
+    chromosome::{Chromosome, EvolvingChromosome, StandardChromosome},
+    gene::{Gene, GeneCreationExt, GeneExt, MutableGene},
+};
 
 // -- Structs: ------------------------------------------------------------
 /// We derive Deserialize/Serialize so we can persist app state on shutdown.
-#[derive(serde::Deserialize, serde::Serialize)]
-#[serde(default)] // if we add new fields, give them default values when deserializing old state
+// #[derive(serde::Deserialize, serde::Serialize)]
+// #[serde(default)] // if we add new fields, give them default values when deserializing old state
 pub struct WeaselApp {
     // Example stuff:
+    // #[serde(skip)] // This how you opt-out of serialization of a field
     sentence: String,
 
-    #[serde(skip)] // This how you opt-out of serialization of a field
+    // #[serde(skip)] // This how you opt-out of serialization of a field
     zoom: f32,
-    #[serde(skip)] // This how you opt-out of serialization of a field
+    // #[serde(skip)] // This how you opt-out of serialization of a field
     mrate: f64,
-    #[serde(skip)] // This how you opt-out of serialization of a field
+    // #[serde(skip)] // This how you opt-out of serialization of a field
     ncopies: u32,
+
+    // The chromosome to play with
+    ec: Chromosome<MutableGene>,
 }
 
 // -- Traits: -------------------------------------------------------------
@@ -43,12 +53,18 @@ trait Ui {
 // -- Impl blocks: --------------------------------------------------------
 impl Default for WeaselApp {
     fn default() -> Self {
+        let sentence = "Hello World!".to_owned();
+        let mrate = 0.0;
+        let ncopies = 0;
+        let ec = EvolvingChromosome::new(sentence.clone(), ncopies).with_mr(mrate);
+
         Self {
             // Example stuff:
-            sentence: "Hello World!".to_owned(),
+            sentence,
             zoom: 2.0,
-            mrate: 0.0,
-            ncopies: 0,
+            mrate,
+            ncopies,
+            ec,
         }
     }
 }
@@ -61,13 +77,13 @@ impl WeaselApp {
 
         // Load previous app state (if any).
         // Note that you must enable the `persistence` feature for this to work.
-        // return Default::default();
+        return Default::default();
 
-        if let Some(storage) = cc.storage {
-            eframe::get_value(storage, eframe::APP_KEY).unwrap_or_default()
-        } else {
-            Default::default()
-        }
+        // if let Some(storage) = cc.storage {
+        //     eframe::get_value(storage, eframe::APP_KEY).unwrap_or_default()
+        // } else {
+        //     Default::default()
+        // }
     }
 }
 
@@ -186,9 +202,9 @@ impl Ui for WeaselApp {
 
 impl eframe::App for WeaselApp {
     /// Called by the framework to save state before shutdown.
-    fn save(&mut self, storage: &mut dyn eframe::Storage) {
-        eframe::set_value(storage, eframe::APP_KEY, self);
-    }
+    // fn save(&mut self, storage: &mut dyn eframe::Storage) {
+    //     eframe::set_value(storage, eframe::APP_KEY, self);
+    // }
 
     /// Called each time the UI needs repainting, which may be many times per second.
     fn update(&mut self, ctx: &egui::Context, frame: &mut eframe::Frame) {
