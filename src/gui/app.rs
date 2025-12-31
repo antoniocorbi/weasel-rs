@@ -51,20 +51,26 @@ pub struct WeaselApp {
     enable_edition: bool,
 }
 
+enum Evolving {
+    YES,
+    NO,
+}
+
 // -- Traits: -------------------------------------------------------------
 
 trait Ui {
     fn draw_top_ui(&mut self, ctx: &egui::Context, frame: &mut eframe::Frame);
     fn draw_central_ui(&mut self, ctx: &egui::Context, frame: &mut eframe::Frame);
     fn draw_bottom_ui(&mut self, ctx: &egui::Context, frame: &mut eframe::Frame);
+    fn update_enable_ui_status(&mut self, evolving: Evolving);
 }
 
 // -- Impl blocks: --------------------------------------------------------
 impl Default for WeaselApp {
     fn default() -> Self {
         let sentence = "Hello World!".to_owned();
-        let mrate = 0.0;
-        let ncopies = 0;
+        let mrate = 0.07;
+        let ncopies = 600;
         let mut ec = EvolvingChromosome::new(sentence.clone(), ncopies).with_mr(mrate);
 
         ec.create_random_genes();
@@ -123,6 +129,21 @@ impl Ui for WeaselApp {
         });
     }
 
+    fn update_enable_ui_status(&mut self, evolving: Evolving) {
+        match evolving {
+            Evolving::YES => {
+                self.enable_stop = true;
+                self.enable_start = false;
+                self.enable_edition = false;
+            }
+            Evolving::NO => {
+                self.enable_stop = false;
+                self.enable_start = true;
+                self.enable_edition = true;
+            }
+        }
+    }
+
     fn draw_central_ui(&mut self, ctx: &egui::Context, frame: &mut eframe::Frame) {
         egui::CentralPanel::default().show(ctx, |ui| {
             // The central panel the region left after adding TopPanel's and SidePanel's
@@ -141,6 +162,8 @@ impl Ui for WeaselApp {
                     self.enable_edition,
                     egui::TextEdit::singleline(&mut self.sentence),
                 );
+                let ts = self.sentence.clone();
+                self.ec.set_target(ts);
             });
 
             // Mutation rate
@@ -183,9 +206,10 @@ impl Ui for WeaselApp {
                     )
                     .clicked()
                 {
-                    self.enable_stop = true;
-                    self.enable_start = false;
-                    self.enable_edition = false;
+                    // self.enable_stop = true;
+                    // self.enable_start = false;
+                    // self.enable_edition = false;
+                    self.update_enable_ui_status(Evolving::YES);
 
                     self.ec.init_evolution_data();
                 }
@@ -196,9 +220,10 @@ impl Ui for WeaselApp {
                     )
                     .clicked()
                 {
-                    self.enable_stop = false;
-                    self.enable_start = true;
-                    self.enable_edition = true;
+                    // self.enable_stop = false;
+                    // self.enable_start = true;
+                    // self.enable_edition = true;
+                    self.update_enable_ui_status(Evolving::NO);
                 }
             });
 
@@ -215,9 +240,10 @@ impl Ui for WeaselApp {
                     self.ec.mr()
                 );
             } else if self.ec.bestfit() == 0 {
-                self.enable_stop = false;
-                self.enable_start = true;
-                self.enable_edition = true;
+                // self.enable_stop = false;
+                // self.enable_start = true;
+                // self.enable_edition = true;
+                self.update_enable_ui_status(Evolving::NO);
             }
 
             // As seen on: https://docs.rs/egui/latest/egui/widgets/text_edit/struct.TextEdit.html

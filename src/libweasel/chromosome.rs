@@ -89,6 +89,11 @@ impl Chromosome<MutableGene> {
         self
     }
 
+    pub fn with_ncopies(mut self, ncopies: u32) -> Self {
+        self.ncopies = ncopies;
+        self
+    }
+
     pub fn bestfit(&self) -> u32 {
         self.ed.bf
     }
@@ -262,6 +267,11 @@ impl<T: ChromosomeExt> Chromosome<T> {
 
     pub fn set_ncopies(&mut self, n: u32) {
         self.ncopies = n;
+    }
+
+    pub fn set_target(&mut self, ts: String) {
+        self.target_string = ts;
+        self.create_genes_from_target();
     }
 
     pub fn target(&self) -> String {
