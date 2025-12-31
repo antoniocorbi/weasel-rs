@@ -13,8 +13,9 @@
 // You should have received a copy of the GNU General Public License
 // along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
+use eframe::App;
 // -- Uses: ---------------------------------------------------------------
-use egui::Color32;
+use egui::{Color32, TextEdit};
 use signals2::*;
 use weasel_rs::libweasel::{
     arguments, charset,
@@ -40,6 +41,14 @@ pub struct WeaselApp {
 
     // The chromosome to play with
     ec: Chromosome<MutableGene>,
+
+    // Enable stop button
+    enable_stop: bool,
+
+    // Enable start button
+    enable_start: bool,
+    // Enable text edition
+    enable_edition: bool,
 }
 
 // -- Traits: -------------------------------------------------------------
@@ -56,7 +65,9 @@ impl Default for WeaselApp {
         let sentence = "Hello World!".to_owned();
         let mrate = 0.0;
         let ncopies = 0;
-        let ec = EvolvingChromosome::new(sentence.clone(), ncopies).with_mr(mrate);
+        let mut ec = EvolvingChromosome::new(sentence.clone(), ncopies).with_mr(mrate);
+
+        ec.create_random_genes();
 
         Self {
             // Example stuff:
@@ -65,6 +76,9 @@ impl Default for WeaselApp {
             mrate,
             ncopies,
             ec,
+            enable_start: true,
+            enable_stop: false,
+            enable_edition: true,
         }
     }
 }
@@ -122,7 +136,11 @@ impl Ui for WeaselApp {
                         .color(Color32::LIGHT_GREEN)
                         .underline(),
                 );
-                ui.text_edit_singleline(&mut self.sentence);
+                //ui.text_edit_singleline(&mut self.sentence);
+                ui.add_enabled(
+                    self.enable_edition,
+                    egui::TextEdit::singleline(&mut self.sentence),
+                );
             });
 
             // Mutation rate
@@ -138,6 +156,7 @@ impl Ui for WeaselApp {
                         .speed(0.025)
                         .max_decimals(2),
                 );
+                self.ec.set_mr(self.mrate);
             });
 
             // Number of copies in each generation
@@ -152,28 +171,58 @@ impl Ui for WeaselApp {
                         .range(0..=5000)
                         .speed(10),
                 );
+                self.ec.set_ncopies(self.ncopies);
             });
 
-            // Actio buttons
+            // Action buttons
             ui.horizontal(|ui| {
                 if ui
-                    .add(egui::Button::new(
-                        egui::RichText::new("Start").color(Color32::YELLOW),
-                    ))
+                    .add_enabled(
+                        self.enable_start,
+                        egui::Button::new(egui::RichText::new("Start").color(Color32::YELLOW)),
+                    )
                     .clicked()
-                {}
+                {
+                    self.enable_stop = true;
+                    self.enable_start = false;
+                    self.enable_edition = false;
+
+                    self.ec.init_evolution_data();
+                }
                 if ui
-                    .add(egui::Button::new(
-                        egui::RichText::new("Stop").color(Color32::RED),
-                    ))
+                    .add_enabled(
+                        self.enable_stop,
+                        egui::Button::new(egui::RichText::new("Stop").color(Color32::RED)),
+                    )
                     .clicked()
-                {}
+                {
+                    self.enable_stop = false;
+                    self.enable_start = true;
+                    self.enable_edition = true;
+                }
             });
 
             ui.separator();
 
+            // Loop the chromosome evolution
+            if self.enable_stop && self.ec.bestfit() > 0 {
+                self.ec.next_evolution_generation();
+                println!(
+                    "gen: {}, bf: {}, ncopies: {}, mr: {}",
+                    self.ec.get_current_gen(),
+                    self.ec.bestfit(),
+                    self.ec.ncopies(),
+                    self.ec.mr()
+                );
+            } else if self.ec.bestfit() == 0 {
+                self.enable_stop = false;
+                self.enable_start = true;
+                self.enable_edition = true;
+            }
+
             // As seen on: https://docs.rs/egui/latest/egui/widgets/text_edit/struct.TextEdit.html
-            let mut s: &str = self.sentence.as_str();
+            // let mut s: &str = self.sentence.as_str();
+            let mut s = self.ec.get_genes();
             ui.add_sized(ui.available_size(), egui::TextEdit::multiline(&mut s));
 
             ui.with_layout(egui::Layout::bottom_up(egui::Align::LEFT), |ui| {
@@ -220,6 +269,9 @@ impl eframe::App for WeaselApp {
 
         // Bottom panel section
         //self.draw_bottom_ui(ctx, frame);
+
+        // Continuous update
+        ctx.request_repaint();
     }
 }
 

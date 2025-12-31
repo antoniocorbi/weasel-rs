@@ -13,6 +13,7 @@
 // You should have received a copy of the GNU General Public License
 // along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
+// -- Uses: ---------------------------------------------------------------
 use crate::libweasel::gene::{
     Gene, GeneCreationExt, GeneExt, GeneList, MutableGene, MutableGeneExt,
 };
@@ -23,6 +24,7 @@ use std::fmt;
 use std::ops::{Index, IndexMut};
 use std::rc::Rc;
 
+// -- Types: --------------------------------------------------------------
 // pub type GeneList = Vec<Box<Gene>>;
 pub type StandardChromosome = Chromosome<Gene>;
 pub type EvolvingChromosome = Chromosome<MutableGene>;
@@ -41,9 +43,31 @@ pub struct Chromosome<T: ChromosomeExt> {
     gene_list: GeneList<T>,
     /// Mutation rate
     mr: f64,
+    /// EvolutionData for a stepbystep evolution
+    ed: EvolutionData,
+}
+
+#[derive(Clone, Debug)]
+struct EvolutionData {
+    pub g: u32,                 // Generation number
+    glc: GeneList<MutableGene>, // Gene list copy
+    bgl: GeneList<MutableGene>, // Best Gene list copy
+    bf: u32,                    // Best fit
 }
 
 // -- Impl. blocks: -------------------------------------------------------
+
+impl Default for EvolutionData {
+    fn default() -> Self {
+        EvolutionData {
+            g: 0,
+            glc: vec![],
+            bgl: vec![],
+            bf: std::u32::MAX,
+        }
+    }
+}
+
 impl ChromosomeExt for Gene {}
 impl ChromosomeExt for MutableGene {}
 
@@ -65,6 +89,70 @@ impl Chromosome<MutableGene> {
         self
     }
 
+    pub fn bestfit(&self) -> u32 {
+        self.ed.bf
+    }
+
+    pub fn init_evolution_data(&mut self) {
+        self.ed = Default::default();
+    }
+
+    pub fn next_evolution_generation(&mut self) {
+        if self.ed.bf == 0 {
+            return;
+        }
+
+        self.gene_list.iter().for_each(|e| {
+            let mg1 = Box::new(MutableGene::new(e.get()));
+            let mg2 = Box::new(MutableGene::new(e.get()));
+            self.ed.glc.push(mg1);
+            self.ed.bgl.push(mg2);
+        });
+
+        // println!("glc: {:?}", glc);
+
+        // Best fit til now.
+        self.ed.bf = self.fitness(&self.ed.glc);
+
+        self.ed.g += 1;
+        let mr = self.mr();
+        for _ in 0..self.ncopies() {
+            //self.mutate_genes(&mut self.ed.glc);
+            //self.ed.glc = self.gene_list.clone();
+            for i in 0..self.size() {
+                //let c = Box::new(self[i].clone());
+                let c = (&self[i]).get();
+                //let c = c.get();
+                self.ed.glc[i].set(c);
+                self.ed.glc[i].mutate_data(mr);
+            }
+
+            let f = self.fitness(&self.ed.glc);
+            if f < self.ed.bf {
+                self.ed.bf = f;
+
+                for i in 0..self.size() {
+                    self.ed.bgl[i].set(self.ed.glc[i].get());
+                }
+
+                if self.ed.bf == 0 {
+                    // bestfit == 0 means the chromosome is equal to target-string.
+                    // println!("Found: {}", bf);
+                    break;
+                }
+            }
+        }
+
+        self.gene_list.iter_mut().enumerate().for_each(|(i, g)| {
+            g.set(self.ed.bgl[i].get());
+        });
+
+        // Emit the signal
+        let self_rc = Rc::new(self.clone());
+        self.on_evolve_iteration
+            .emit(self.ed.g, self.ed.bf, self_rc.clone());
+    }
+
     fn mutate_genes(&self, v: &mut GeneList<MutableGene>) {
         for i in 0..self.size() {
             //let c = Box::new(self[i].clone());
@@ -75,8 +163,16 @@ impl Chromosome<MutableGene> {
         }
     }
 
+    pub fn get_current_gen(&self) -> u32 {
+        self.ed.g
+    }
+
     pub fn mr(&self) -> f64 {
         self.mr
+    }
+
+    pub fn set_mr(&mut self, mr: f64) {
+        self.mr = mr;
     }
 
     pub fn evolve(&mut self) {
@@ -153,6 +249,7 @@ impl<T: ChromosomeExt> Chromosome<T> {
             ncopies,
             gene_list: vec![],
             mr: 0.0,
+            ed: Default::default(),
         };
         c.create_random_genes();
 
@@ -161,6 +258,10 @@ impl<T: ChromosomeExt> Chromosome<T> {
 
     pub fn ncopies(&self) -> u32 {
         self.ncopies
+    }
+
+    pub fn set_ncopies(&mut self, n: u32) {
+        self.ncopies = n;
     }
 
     pub fn target(&self) -> String {
@@ -220,7 +321,7 @@ impl<T: ChromosomeExt> Chromosome<T> {
         coloredstr
     }
 
-    fn create_random_genes(&mut self) {
+    pub fn create_random_genes(&mut self) {
         self.free_gene_list();
         for _ in 0..self.target_string.len() {
             self.gene_list.push(Box::new(T::new_from_random()));
