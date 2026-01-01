@@ -118,7 +118,10 @@ impl EvolvingChromosome {
         // println!("glc: {:?}", glc);
 
         // Best fit til now.
-        self.ed.bf = self.fitness(&self.ed.glc);
+        let f = self.fitness(&self.ed.glc);
+        if f < self.ed.bf {
+            self.ed.bf = f;
+        }
 
         self.ed.g += 1;
         let mr = self.mr();

@@ -15,7 +15,7 @@
 
 use eframe::App;
 // -- Uses: ---------------------------------------------------------------
-use egui::{Color32, TextEdit};
+use egui::{Align, Color32, TextEdit};
 use signals2::*;
 use weasel_rs::libweasel::{
     arguments, charset,
@@ -203,7 +203,8 @@ impl Ui for WeaselApp {
             });
 
             // Action buttons
-            ui.horizontal(|ui| {
+            ui.with_layout(egui::Layout::left_to_right(egui::Align::Min), |ui| {
+                //ui.horizontal(|ui| {
                 if ui
                     .add_enabled(
                         self.enable_start,
@@ -230,6 +231,26 @@ impl Ui for WeaselApp {
                     // self.enable_edition = true;
                     self.update_enable_ui_status(Evolving::NO);
                 }
+
+                let spacing = ui.available_width() - 300.0; // 60.0 es un estimado del ancho del segundo botón
+                ui.add_space(spacing);
+
+                ui.label(
+                    egui::RichText::new(format!("BF: {}", self.ec.bestfit()))
+                        .strong()
+                        .color(Color32::LIGHT_GREEN)
+                        .underline(),
+                );
+
+                let spacing = ui.available_width() - 120.0; // 60.0 es un estimado del ancho del segundo botón
+                ui.add_space(spacing);
+
+                ui.label(
+                    egui::RichText::new(format!("Generation: {}", self.ec.get_current_gen()))
+                        .strong()
+                        .color(Color32::LIGHT_YELLOW)
+                        .underline(),
+                );
             });
 
             ui.separator();
@@ -237,13 +258,13 @@ impl Ui for WeaselApp {
             // Loop the chromosome evolution
             if self.enable_stop && self.ec.bestfit() > 0 {
                 self.ec.next_evolution_generation();
-                println!(
-                    "gen: {}, bf: {}, ncopies: {}, mr: {}",
-                    self.ec.get_current_gen(),
-                    self.ec.bestfit(),
-                    self.ec.ncopies(),
-                    self.ec.mr()
-                );
+                // println!(
+                //     "gen: {}, bf: {}, ncopies: {}, mr: {}",
+                //     self.ec.get_current_gen(),
+                //     self.ec.bestfit(),
+                //     self.ec.ncopies(),
+                //     self.ec.mr()
+                // );
             } else if self.ec.bestfit() == 0 {
                 // self.enable_stop = false;
                 // self.enable_start = true;
