@@ -73,7 +73,7 @@ impl Default for WeaselApp {
         let ncopies = 600;
         let mut ec = EvolvingChromosome::new(sentence.clone(), ncopies).with_mr(mrate);
 
-        ec.create_random_genes();
+        // ec.create_random_genes();
 
         Self {
             // Example stuff:
@@ -162,8 +162,13 @@ impl Ui for WeaselApp {
                     self.enable_edition,
                     egui::TextEdit::singleline(&mut self.sentence),
                 );
-                let ts = self.sentence.clone();
-                self.ec.set_target(ts);
+
+                // If the user is changing the input sentence then
+                // update it into the evolving chromosome 'ec'.
+                if self.sentence != self.ec.target() {
+                    let ts = self.sentence.clone();
+                    self.ec.set_target(ts);
+                }
             });
 
             // Mutation rate

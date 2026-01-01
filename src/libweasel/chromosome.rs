@@ -83,7 +83,8 @@ impl<T: ChromosomeExt> fmt::Display for Chromosome<T> {
     }
 }
 
-impl Chromosome<MutableGene> {
+// impl Chromosome<MutableGene> {
+impl EvolvingChromosome {
     pub fn with_mr(mut self, mr: f64) -> Self {
         self.mr = mr;
         self
@@ -269,9 +270,11 @@ impl<T: ChromosomeExt> Chromosome<T> {
         self.ncopies = n;
     }
 
+    // Each time we change the target string in the chromosome we
+    // regenerate the chromosome random genes.
     pub fn set_target(&mut self, ts: String) {
         self.target_string = ts;
-        self.create_genes_from_target();
+        self.create_random_genes();
     }
 
     pub fn target(&self) -> String {
