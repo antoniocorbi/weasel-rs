@@ -316,7 +316,7 @@ impl<T: ChromosomeExt> Chromosome<T> {
 
     /// Mark wrong genes with a different color.
     pub fn get_genes_colored(&self) -> String {
-        let gs = Self::gene_list_as_string(&self.gene_list);
+        let gs = self.get_genes(); // Self::gene_list_as_string(&self.gene_list);
         let ts = self.target();
         let mut coloredstr = "".to_owned();
         let mut charstr: String = "".into();
