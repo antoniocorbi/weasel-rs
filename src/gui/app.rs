@@ -144,6 +144,28 @@ impl Ui for WeaselApp {
         }
     }
 
+    // fn colorize_bad_genes(&self) -> String {
+    //     let gs = self.get_genes(); // Self::gene_list_as_string(&self.gene_list);
+    //     let ts = self.target();
+    //     let mut coloredstr = "".to_owned();
+    //     let mut charstr: String = "".into();
+    //
+    //     // 1. Get the character iterators for both strings.
+    //     let chars_gs = gs.chars();
+    //     let chars_ts = ts.chars();
+    //
+    //     chars_gs.zip(chars_ts).for_each(|(g, t)| {
+    //         charstr = format!("{}", g);
+    //         if g != t {
+    //             // Char in gene sequence is different from the one in target string
+    //             charstr = format!("{}", charstr.black().on_white());
+    //         }
+    //         coloredstr += &charstr;
+    //     });
+    //
+    //     coloredstr
+    // }
+
     fn draw_central_ui(&mut self, ctx: &egui::Context, frame: &mut eframe::Frame) {
         egui::CentralPanel::default().show(ctx, |ui| {
             // The central panel the region left after adding TopPanel's and SidePanel's
@@ -275,7 +297,7 @@ impl Ui for WeaselApp {
             // As seen on: https://docs.rs/egui/latest/egui/widgets/text_edit/struct.TextEdit.html
             // let mut s: &str = self.sentence.as_str();
             let mut s = self.ec.get_genes();
-            ui.add_sized(ui.available_size(), egui::TextEdit::multiline(&mut s));
+            ui.add_sized(ui.available_size(), egui::TextEdit::singleline(&mut s));
 
             ui.with_layout(egui::Layout::bottom_up(egui::Align::LEFT), |ui| {
                 powered_by_egui_and_eframe(ui);
