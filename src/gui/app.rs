@@ -331,7 +331,13 @@ impl eframe::App for WeaselApp {
 
     /// Called each time the UI needs repainting, which may be many times per second.
     fn update(&mut self, ctx: &egui::Context, frame: &mut eframe::Frame) {
-        // set zoom-factor.
+        // Si detectas que estás en un navegador, puedes forzar el scale factor a 1.0
+        // o al valor que reporte el window del navegador.
+        //#[cfg(target_arch = "wasm32")]
+        //ctx.set_pixels_per_point(0.75);
+
+        // set zoom-factor only in the desktop-gui version.
+        #[cfg(not(target_arch = "wasm32"))]
         ctx.set_zoom_factor(self.zoom);
 
         // Put your widgets into a `SidePanel`, `TopBottomPanel`, `CentralPanel`, `Window` or `Area`.
